@@ -1,62 +1,100 @@
 # GitHub Trending Radar
 
-抓取 **GitHub Trending（daily）** 当日榜，按「今日涨星」画横向柱状图；README 内嵌可直接粘贴给 Agent 的日更 Prompt。
+每日自动：抓取 **GitHub Trending（daily）** → 按「今日涨星」出图 → 挑最热仓写一版**可复现、极客向**的小红书草稿（本地 Markdown，不登录小红书）。
 
-> 不编造 stars / 涨粉 / 变现数字。示例图仅作 artifact；请自行重跑脚本拿当日真实数据。
+> 不编造 stars / 涨粉 / 变现数字。`examples/` 里的图和稿仅作 artifact；请自行重跑拿当日真实数据。
 
 ---
 
 ## 它做什么
 
 1. 请求公开页 `https://github.com/trending?since=daily`（无需 GitHub API token）
-2. 解析每个仓库的名称、今日星标增量、总星标、语言、描述
-3. 输出 PNG 横向柱状图（默认 Top 10）
-
-可选：把下方 **Agent Prompt** 整段丢给 Agent，让它顺带快读 Top 仓、写分享草稿。
+2. 解析名称、今日星标增量、总星标、语言、描述
+3. **选型规则**：按 `stars_today` 降序；**图表**画 Top N（默认 10）；**小红书草稿**默认拆解榜一（可用 `--pick` 改）
+4. 写入 `output/YYYY-MM-DD/`（Asia/Shanghai）并同步 `output/latest/`：`chart.png` + `xhs-draft.md` + `meta.json`
 
 ---
 
-## 快速开始
+## 一键跑完整流水线（推荐）
 
 ```bash
 git clone https://github.com/alongbow/github-trending-radar.git
 cd github-trending-radar
 python3 -m pip install -r requirements.txt
-python3 fetch_trending_chart.py
+python3 run_daily.py
 ```
 
-### 可选参数
+产物目录示例：
+
+```
+output/2026-10-16/
+├── chart.png        # 今日涨星横向柱状图（light-clean）
+├── xhs-draft.md     # 小红书可粘贴草稿
+└── meta.json        # 结构化元数据（榜单切片 + 选型）
+output/latest/       # 同上，始终指向最近一次
+```
+
+### `run_daily.py` 参数
+
+| 参数 | 说明 | 默认 |
+|------|------|------|
+| `--top-n N` | 柱状图条数（按 stars_today） | `10` |
+| `--pick N` | 笔记拆解第几名（1 = 最热） | `1` |
+| `--since daily\|weekly\|monthly` | 时间窗口 | `daily` |
+| `--language python` | 语言 slug（空=全语言） | 空 |
+| `--output-root DIR` | 输出根目录 | `./output` |
+
+示例：
+
+```bash
+python3 run_daily.py --top-n 10 --pick 1
+python3 run_daily.py --language python --top-n 15
+```
+
+草稿固定章节（短句、可复现，不是新闻列表）：
+
+- 今天拆谁
+- 它是干什么的
+- 为什么突然火
+- 你怎么自己试用
+- 涨星一图看懂
+
+文末附建议话题标签。脚本**只写本地文件**，不调用小红书 API。
+
+---
+
+## 只出图（旧入口仍可用）
+
+```bash
+python3 fetch_trending_chart.py
+python3 fetch_trending_chart.py --top 10 --since daily -o out.png
+python3 fetch_trending_chart.py --language python --top 15
+```
 
 | 参数 | 说明 | 默认 |
 |------|------|------|
 | `--top N` | 柱状图条数 | `10` |
 | `--since daily\|weekly\|monthly` | 时间窗口 | `daily` |
-| `--language python` | 语言 slug（空=全语言） | 空 |
+| `--language python` | 语言 slug | 空 |
 | `-o path.png` | 输出路径 | `trending_stars_today.png` |
-
-示例：
-
-```bash
-python3 fetch_trending_chart.py --top 10 --since daily -o out.png
-python3 fetch_trending_chart.py --language python --top 15
-```
 
 ### 依赖
 
-见 `requirements.txt`：`requests`、`beautifulsoup4`、`matplotlib`。
+见 `requirements.txt`：`requests`、`beautifulsoup4`、`matplotlib`（无新增大框架）。
 
 ### 示例产物
 
-`examples/sample_chart.png` — 某次真实抓取的示例图（数字会过期，请重跑）。  
-`examples/xhs-note.md` — 分享草稿示例，非独立 Prompt 产品。
+- `examples/sample_chart.png` — 某次真实抓取示例图（数字会过期）
+- `examples/xhs-note.md` — 旧版分享草稿示例；**日更请以 `run_daily.py` 生成的 `xhs-draft.md` 为准**
 
 ---
 
 ## 数据源说明
 
 - 主路径：抓取公开 HTML `https://github.com/trending`
-- 若页面结构变更或请求被拦：脚本会报错退出；**不要**手工填假数字
+- 若页面结构变更或请求被拦：脚本报错退出；**不要**手工填假数字
 - 请礼貌限速、标明 User-Agent（脚本已内置研究用途 UA）
+- 日期与输出目录名使用 **Asia/Shanghai**
 
 ---
 
@@ -85,10 +123,12 @@ python3 fetch_trending_chart.py --language python --top 15
 - 按 `stars today` 降序排序，取 Top **{{TopN}}**（默认 10）
 - 若页面结构变了或请求被拦：说明原因，并给出可复现的备用方案（本地脚本 / `gh` / RSS），**不要编数据**
 
-也可直接跑本仓库脚本：
+也可直接跑本仓库流水线：
 
 ```bash
 cd /path/to/github-trending-radar
+python3 run_daily.py --top-n {{TopN}}
+# 或只要图：
 python3 fetch_trending_chart.py --top {{TopN}} -o {{输出目录}}/chart.png
 ```
 
@@ -113,24 +153,27 @@ python3 fetch_trending_chart.py --top {{TopN}} -o {{输出目录}}/chart.png
 
 - 用横向柱状图画 Top N 的「今日星标」
 - 标题含日期与 `since=daily`
-- 保存到：`{{输出目录}}/chart.png`（或项目约定路径）
+- 保存到：`{{输出目录}}/chart.png`（或 `output/YYYY-MM-DD/chart.png`）
 - 图上数字用千分位，仓库名完整可读
 
-#### Step 4 — 分享草稿（中文，小红书风）
+#### Step 4 — 分享草稿（中文，小红书风 · 极客可复现）
 
-写一版 **短、可扫、极客向** 的笔记草稿，结构：
+优先用流水线生成的 `xhs-draft.md`；若手写，结构固定为：
 
-1. 痛点（每天刷 Trending 太慢）
-2. Prompt / 流水线一句话（怎么让 Agent 日更）
-3. 今日 Top 亮点（3–5 个，含真实 `+N today`）
-4. 复现方式（命令 / 脚本路径）
-5. 结尾 CTA（收藏 / 私信要 Prompt）
+1. 封面钩子 + 一行为什么热
+2. 今天拆谁（链接 / 语言 / +今日 / 总量 / 描述）
+3. 它是干什么的
+4. 为什么突然火（事实 + 标注推断）
+5. 你怎么自己试用（命令可复现）
+6. 涨星一图看懂
+7. 建议话题标签
 
 约束：
 
 - 不写虚假收益、不暗示「跟这个能赚钱」
 - 不剧透未公开漏洞 / 不教人做恶意逆向
 - 数字必须来自本次抓取；拿不到就写「抓取失败」
+- 语气：极客冷静、短句、可复现拆解，**不是**新闻聚合列表
 
 ### 硬性约束
 
@@ -161,20 +204,21 @@ python3 fetch_trending_chart.py --top {{TopN}} -o {{输出目录}}/chart.png
 
 #### D. 分享草稿
 
-完整正文（含建议标题 + 3–8 个标签）
+完整正文（含建议标题 + 标签）；推荐章节见上文 Step 4
 
 #### E. 复现清单
 
 ```bash
 cd /path/to/github-trending-radar
-python3 fetch_trending_chart.py --top {{TopN}}
+python3 run_daily.py --top-n {{TopN}}
 ```
 
 ### 可选参数（你可在开头声明）
 
 - `since`: daily | weekly | monthly（本任务默认 daily）
 - `language`: 空 = 全语言；或 `python` / `typescript` 等
-- `top_n`: 默认 10
+- `top_n`: 默认 10（图表）
+- `pick`: 默认 1（笔记拆解榜一）
 - `tone`: 极客冷静 / 轻松吐槽（默认极客冷静）
 
 ### 验收标准
@@ -190,11 +234,15 @@ python3 fetch_trending_chart.py --top {{TopN}}
 
 ```
 github-trending-radar/
-├── fetch_trending_chart.py   # 抓取 + 出图
+├── run_daily.py              # 日更流水线入口（抓取 → 选型 → 出图 → 草稿）
+├── fetch_trending_chart.py   # 抓取 + 出图（可被流水线复用）
 ├── requirements.txt
 ├── README.md                 # 本文件（含 Agent Prompt）
 ├── LICENSE                   # MIT
 ├── .gitignore
+├── output/                   # 日更产物（默认 gitignore，本地重跑）
+│   ├── YYYY-MM-DD/
+│   └── latest/
 └── examples/
     ├── sample_chart.png      # 示例图（可选）
     └── xhs-note.md           # 分享草稿示例

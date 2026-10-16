@@ -18,7 +18,12 @@ build/
 .vscode/
 *.swp
 .DS_Store
-# regenerated charts (keep examples/)
+
+# regenerated charts at repo root
 trending_stars_today.png
+
+# daily pipeline output (heavy / regenerable); keep examples/ samples
+output/
+
 *.png
 !examples/*.png
