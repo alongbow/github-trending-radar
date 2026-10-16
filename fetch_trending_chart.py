@@ -92,11 +92,6 @@ def format_stars(n: int) -> str:
     return f"+{n}"
 
 
-def format_today_label(n: int) -> str:
-    """Bar label: 今日 +xx (explicitly today's gain, not total stars)."""
-    return f"今日 {format_stars(n)}"
-
-
 def _rank_colors(n: int) -> list[str]:
     """Light blue → indigo gradient; top rank (index 0 before reverse) darkest."""
     # matplotlib LinearSegmentedColormap without importing colors module name clutter
@@ -159,16 +154,15 @@ def plot_chart(repos: list[dict], out_path: Path, top_n: int, title: str) -> Pat
     )
     ax.bar_label(
         bars,
-        labels=[format_today_label(v) for v in values],
-        padding=6,
-        fontsize=9,
-        color="#334155",
-        fontweight="normal",
+        labels=[format_stars(v) for v in values],
+        padding=8,
+        fontsize=11,
+        color="#0f172a",
+        fontweight="bold",
     )
 
-    # Explicitly: today's NEW stars, NOT total stars
-    ax.set_xlabel("今日新增 Stars（不是总星）", fontsize=11, color="#475569", labelpad=10)
-    ax.set_title(title, fontsize=14, fontweight="bold", color="#0f172a", pad=14, loc="left")
+    ax.set_xlabel("")
+    ax.set_title(title, fontsize=22, fontweight="bold", color="#0f172a", pad=18, loc="left")
     ax.set_xlim(0, max(values) * 1.22 if values else 1)
 
     # Thin light-gray grid on x-axis only
@@ -232,7 +226,7 @@ def main() -> int:
     from zoneinfo import ZoneInfo
 
     today = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d")
-    title = f"GitHub 今日涨星 Top · 今日新增（不是总星）  ·  {today}"
+    title = f"今日涨星  ·  {today}"
     if args.language:
         title += f"  ({args.language})"
     path = plot_chart(repos, args.output, top_n=args.top, title=title)
