@@ -81,6 +81,30 @@ def fetch_trending(since: str = "daily", language: str = "", timeout: int = 30) 
     return repos
 
 
+def format_stars(n: int) -> str:
+    """Compact star delta for chart labels, e.g. +1.2k / +856."""
+    if n >= 1000:
+        k = n / 1000
+        text = f"{k:.1f}k" if k < 10 else f"{k:.0f}k"
+        if text.endswith(".0k"):
+            text = text.replace(".0k", "k")
+        return f"+{text}"
+    return f"+{n}"
+
+
+def _rank_colors(n: int) -> list[str]:
+    """Light blue → indigo gradient; top rank (index 0 before reverse) darkest."""
+    # matplotlib LinearSegmentedColormap without importing colors module name clutter
+    from matplotlib.colors import LinearSegmentedColormap
+
+    # indigo (dark/saturated) → light blue; index 0 = top rank = darkest
+    cmap = LinearSegmentedColormap.from_list(
+        "trending_blue",
+        ["#2a3f7a", "#3d5a9e", "#6b8fd4", "#c5d8f0"],
+    )
+    return [cmap(i / max(n - 1, 1)) for i in range(n)]
+
+
 def plot_chart(repos: list[dict], out_path: Path, top_n: int, title: str) -> Path:
     top = sorted(repos, key=lambda r: r["stars_today"], reverse=True)[:top_n]
     if not top:
@@ -88,21 +112,67 @@ def plot_chart(repos: list[dict], out_path: Path, top_n: int, title: str) -> Pat
 
     labels = [r["name"] for r in top]
     values = [r["stars_today"] for r in top]
-    # Horizontal bar chart: easiest to read long repo names
+    colors = _rank_colors(len(top))  # index 0 = top rank = darkest
+
+    # Horizontal bar chart: reverse so top rank sits at the top of the plot
     labels = list(reversed(labels))
     values = list(reversed(values))
+    colors = list(reversed(colors))
 
-    fig_h = max(4.0, 0.45 * len(labels) + 1.5)
-    fig, ax = plt.subplots(figsize=(10, fig_h))
-    bars = ax.barh(labels, values, color="#2da44e", edgecolor="#1a7f37", linewidth=0.5)
-    ax.bar_label(bars, labels=[f"{v:,}" for v in values], padding=4, fontsize=9)
-    ax.set_xlabel("Stars gained today")
-    ax.set_title(title)
-    ax.set_xlim(0, max(values) * 1.18 if values else 1)
-    ax.grid(axis="x", linestyle="--", alpha=0.35)
-    fig.tight_layout()
+    fig_h = max(4.2, 0.48 * len(labels) + 1.8)
+    fig, ax = plt.subplots(figsize=(11, fig_h), facecolor="#ffffff")
+    ax.set_facecolor("#fafbfc")
+
+    bars = ax.barh(
+        labels,
+        values,
+        color=colors,
+        edgecolor="none",
+        height=0.72,
+        zorder=3,
+    )
+    ax.bar_label(
+        bars,
+        labels=[format_stars(v) for v in values],
+        padding=6,
+        fontsize=9,
+        color="#334155",
+        fontweight="normal",
+    )
+
+    ax.set_xlabel("")
+    ax.set_title(title, fontsize=14, fontweight="bold", color="#0f172a", pad=14, loc="left")
+    ax.set_xlim(0, max(values) * 1.22 if values else 1)
+
+    # Thin light-gray grid on x-axis only
+    ax.xaxis.grid(True, color="#e2e8f0", linewidth=0.8, linestyle="-", zorder=0)
+    ax.yaxis.grid(False)
+    ax.set_axisbelow(True)
+
+    # Clean minimal frame: remove spines clutter
+    for spine in ("top", "right", "left"):
+        ax.spines[spine].set_visible(False)
+    ax.spines["bottom"].set_color("#cbd5e1")
+    ax.spines["bottom"].set_linewidth(0.8)
+
+    ax.tick_params(axis="y", length=0, labelsize=10, colors="#1e293b", pad=4)
+    ax.tick_params(axis="x", length=0, labelsize=8, colors="#94a3b8")
+    ax.yaxis.set_tick_params(which="both", left=False)
+
+    # Subtle footer
+    fig.text(
+        0.99,
+        0.01,
+        "source: github.com/trending",
+        ha="right",
+        va="bottom",
+        fontsize=7,
+        color="#94a3b8",
+    )
+
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150, bbox_inches="tight")
+    fig.savefig(out_path, dpi=180, bbox_inches="tight", facecolor=fig.get_facecolor())
     plt.close(fig)
     return out_path
 
@@ -131,10 +201,13 @@ def main() -> int:
             flush=True,
         )
 
-    title = f"GitHub Trending — stars today (since={args.since}"
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    today = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d")
+    title = f"GitHub Trending · Stars Today  ·  {today}"
     if args.language:
-        title += f", lang={args.language}"
-    title += ")"
+        title += f"  ({args.language})"
     path = plot_chart(repos, args.output, top_n=args.top, title=title)
     print(f"Wrote chart: {path}", flush=True)
     return 0
