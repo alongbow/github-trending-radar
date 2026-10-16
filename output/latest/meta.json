@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "since": "daily",
+  "language": null,
+  "top_n_chart": 10,
+  "pick_rank": 1,
+  "selection_rule": "hottest by stars_today; note uses --pick (default #1); chart uses top-n",
+  "focus": {
+    "name": "morluto/rea",
+    "url": "https://github.com/morluto/rea",
+    "stars_today": 32314,
+    "total_stars": 275945,
+    "language": "TypeScript",
+    "description": "Reverse engineer anything with agents, from app behavior down to native binaries."
+  },
+  "top": [
+    {
+      "rank": 1,
+      "name": "morluto/rea",
+      "stars_today": 32314,
+      "total_stars": 275537,
+      "language": "TypeScript"
+    },
+    {
+      "rank": 2,
+      "name": "debpalash/VoiceStudio",
+      "stars_today": 3024,
+      "total_stars": 69475,
+      "language": "Python"
+    },
+    {
+      "rank": 3,
+      "name": "NationalSecurityAgency/ghidra",
+      "stars_today": 1369,
+      "total_stars": 88979,
+      "language": "Java"
+    },
+    {
+      "rank": 4,
+      "name": "K-Dense-AI/scientific-agent-skills",
+      "stars_today": 1091,
+      "total_stars": 50703,
+      "language": "Python"
+    },
+    {
+      "rank": 5,
+      "name": "affaan-m/ECC",
+      "stars_today": 1013,
+      "total_stars": 280573,
+      "language": "JavaScript"
+    },
+    {
+      "rank": 6,
+      "name": "LibreSpark/LibreTV",
+      "stars_today": 978,
+      "total_stars": 18210,
+      "language": "TypeScript"
+    },
+    {
+      "rank": 7,
+      "name": "mksglu/context-mode",
+      "stars_today": 904,
+      "total_stars": 29883,
+      "language": "TypeScript"
+    },
+    {
+      "rank": 8,
+      "name": "xerj-org/xerj",
+      "stars_today": 715,
+      "total_stars": 5889,
+      "language": "Rust"
+    },
+    {
+      "rank": 9,
+      "name": "obra/superpowers",
+      "stars_today": 582,
+      "total_stars": 300080,
+      "language": "Shell"
+    },
+    {
+      "rank": 10,
+      "name": "JuliusBrussee/caveman",
+      "stars_today": 433,
+      "total_stars": 112721,
+      "language": "Go"
+    }
+  ],
+  "files": [
+    "card-demo.png",
+    "card-focus.png",
+    "card-howto.png",
+    "card-rank.png",
+    "chart.png",
+    "meta.json",
+    "xhs-body-paste.txt",
+    "xhs-draft-v3.md",
+    "xhs-draft.md",
+    "xhs-title-paste.txt"
+  ],
+  "total_stars_refreshed_via": "GitHub API 2026-10-16"
+}

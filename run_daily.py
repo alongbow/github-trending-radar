@@ -170,7 +170,7 @@ def write_outputs(
 
     chart_name = "chart.png"
     chart_path = out_dir / chart_name
-    title = f"GitHub Trending · Stars Today  ·  {date}"
+    title = f"GitHub 今日涨星 Top · 今日新增（不是总星）  ·  {date}"
     if language:
         title += f"  ({language})"
     plot_chart(ranked, chart_path, top_n=top_n, title=title)

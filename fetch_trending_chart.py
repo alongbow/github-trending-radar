@@ -92,6 +92,11 @@ def format_stars(n: int) -> str:
     return f"+{n}"
 
 
+def format_today_label(n: int) -> str:
+    """Bar label: 今日 +xx (explicitly today's gain, not total stars)."""
+    return f"今日 {format_stars(n)}"
+
+
 def _rank_colors(n: int) -> list[str]:
     """Light blue → indigo gradient; top rank (index 0 before reverse) darkest."""
     # matplotlib LinearSegmentedColormap without importing colors module name clutter
@@ -105,7 +110,28 @@ def _rank_colors(n: int) -> list[str]:
     return [cmap(i / max(n - 1, 1)) for i in range(n)]
 
 
+def _setup_cjk_font() -> None:
+    """Prefer Noto Sans CJK SC so axis labels with Chinese render correctly."""
+    from matplotlib import font_manager
+
+    preferred = [
+        "Noto Sans CJK SC",
+        "Noto Sans CJK JP",
+        "Noto Serif CJK SC",
+        "Source Han Sans SC",
+        "WenQuanYi Micro Hei",
+        "DejaVu Sans",
+    ]
+    available = {f.name for f in font_manager.fontManager.ttflist}
+    for name in preferred:
+        if name in available:
+            plt.rcParams["font.sans-serif"] = [name, "DejaVu Sans"]
+            plt.rcParams["axes.unicode_minus"] = False
+            return
+
+
 def plot_chart(repos: list[dict], out_path: Path, top_n: int, title: str) -> Path:
+    _setup_cjk_font()
     top = sorted(repos, key=lambda r: r["stars_today"], reverse=True)[:top_n]
     if not top:
         raise RuntimeError("No repos to plot.")
@@ -133,14 +159,15 @@ def plot_chart(repos: list[dict], out_path: Path, top_n: int, title: str) -> Pat
     )
     ax.bar_label(
         bars,
-        labels=[format_stars(v) for v in values],
+        labels=[format_today_label(v) for v in values],
         padding=6,
         fontsize=9,
         color="#334155",
         fontweight="normal",
     )
 
-    ax.set_xlabel("")
+    # Explicitly: today's NEW stars, NOT total stars
+    ax.set_xlabel("今日新增 Stars（不是总星）", fontsize=11, color="#475569", labelpad=10)
     ax.set_title(title, fontsize=14, fontweight="bold", color="#0f172a", pad=14, loc="left")
     ax.set_xlim(0, max(values) * 1.22 if values else 1)
 
@@ -205,7 +232,7 @@ def main() -> int:
     from zoneinfo import ZoneInfo
 
     today = datetime.now(ZoneInfo("Asia/Shanghai")).strftime("%Y-%m-%d")
-    title = f"GitHub Trending · Stars Today  ·  {today}"
+    title = f"GitHub 今日涨星 Top · 今日新增（不是总星）  ·  {today}"
     if args.language:
         title += f"  ({args.language})"
     path = plot_chart(repos, args.output, top_n=args.top, title=title)

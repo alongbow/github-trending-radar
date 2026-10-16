@@ -1,5 +1,7 @@
-# examples
+# 示例产物（artifact）
 
-- `sample_chart.png` — 一次真实抓取生成的示例图（仅作展示；数字随当日榜变化，请自行重跑脚本）
-- `xhs-draft.md` — `run_daily.py` 生成的小红书草稿示例（章节模板与日更一致）
-- `xhs-note.md` — 旧版分享草稿示例（非可复用 Prompt；Prompt 见仓库根 README）
+请以 `output/latest/` 为准重跑拿当日数据。本目录样例图：`sample_chart.png`。
+
+最新小红书稿风格见：`../output/latest/xhs-draft-v3.md`
+
+标题示例：GitHub今日涨星第一！REA +3.2万

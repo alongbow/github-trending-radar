@@ -27,3 +27,13 @@ output/
 
 *.png
 !examples/*.png
+!output/latest/*.png
+!output/latest/*.md
+!output/latest/*.txt
+!output/latest/meta.json
+
+# track output/latest deliverables (not dated regenerable folders)
+!output/
+output/*
+!output/latest/
+
